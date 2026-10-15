@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import Entrada from '@/app/components/Entrada'
 import IndiceLetras from '@/app/components/IndiceLetras'
-import { INACTIVA, PILDORA } from '@/lib/estilos'
+import { INACTIVA, BOTON } from '@/lib/estilos'
 import { contarPorLetra, letraDe } from '@/lib/letras'
 import { slugify } from '@/lib/normalizar'
 import type { Palabra } from '@/lib/types'
@@ -72,7 +72,7 @@ function SinResultados({ texto }: { texto: string }) {
       {texto && (
         <Link
           href={`/colabora?palabra=${encodeURIComponent(texto)}`}
-          className={`${PILDORA} ${INACTIVA} mt-4`}
+          className={`${BOTON} ${INACTIVA} mt-4`}
         >
           ¿Falta «{texto}»? Propónla
         </Link>

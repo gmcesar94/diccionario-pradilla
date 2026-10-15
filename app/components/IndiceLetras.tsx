@@ -34,13 +34,14 @@ export default function IndiceLetras({ recuento }: { recuento: Record<string, nu
 
   return (
     <nav ref={tira} aria-label="Índice alfabético" className="sticky top-(--alto-cabecera) z-10 border-b border-rule bg-paper">
-      <ul className="flex gap-1.5 overflow-x-auto px-5 py-3 md:px-6">
+      {/* En móvil la tira se desliza; desde lg (escritorio) las letras se reparten el ancho. */}
+      <ul className="flex gap-1.5 overflow-x-auto px-5 py-3 lg:overflow-visible md:px-6">
         {LETRAS.map((letra) => {
-          const base = 'flex size-10 shrink-0 items-center justify-center rounded-md border text-lg leading-none'
+          const base = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-md border text-lg leading-none lg:w-full'
 
           if (!recuento[letra]) {
             return (
-              <li key={letra}>
+              <li key={letra} className="lg:min-w-0 lg:flex-1">
                 <span aria-disabled="true" className={`${base} border-rule text-rule`}>
                   {letra}
                 </span>
@@ -50,7 +51,7 @@ export default function IndiceLetras({ recuento }: { recuento: Record<string, nu
 
           const esActual = letra === actual
           return (
-            <li key={letra}>
+            <li key={letra} className="lg:min-w-0 lg:flex-1">
               <a
                 href={`#letra-${letra}`}
                 onClick={() => setActual(letra)}

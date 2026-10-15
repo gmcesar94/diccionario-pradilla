@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { CampoBusqueda, useBusqueda } from '@/app/components/Buscador'
-import { ACTIVA, INACTIVA, PILDORA } from '@/lib/estilos'
+import { ACTIVA, INACTIVA, BOTON } from '@/lib/estilos'
 
 // Barra fija con el título y, debajo, la fila del buscador y las pestañas.
 // Cuando esa fila sale de la vista, aparece «Buscar» en la barra fija y,
@@ -115,7 +115,7 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
               aria-expanded={desplegado}
               aria-controls="buscador-desplegable"
               aria-label={desplegado ? 'Cerrar el buscador' : 'Buscar'}
-              className={`${PILDORA} ${desplegado ? `${ACTIVA} group gap-2 sm:pr-2.5` : INACTIVA} max-sm:w-10 max-sm:justify-center max-sm:px-0`}
+              className={`${BOTON} ${desplegado ? `${ACTIVA} group gap-2 sm:pr-2.5` : INACTIVA} max-sm:w-10 max-sm:justify-center max-sm:px-0`}
             >
               {desplegado ? (
                 <>
@@ -139,13 +139,13 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
                 router.push(volverA.current)
               }}
               aria-label="Cerrar Colabora y volver al diccionario"
-              className={`${PILDORA} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
+              className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
             >
               Colabora
               <Cerrar />
             </Link>
           ) : (
-            <Link href="/colabora" className={`${PILDORA} ${INACTIVA}`}>
+            <Link href="/colabora" className={`${BOTON} ${INACTIVA}`}>
               Colabora
             </Link>
           )}
@@ -189,14 +189,14 @@ function FilaBusqueda({
         <Link
           href="/"
           aria-current={ruta === '/' ? 'page' : undefined}
-          className={`${PILDORA} ${ruta === '/' ? ACTIVA : INACTIVA}`}
+          className={`${BOTON} ${ruta === '/' ? ACTIVA : INACTIVA}`}
         >
           Listado
         </Link>
         <Link
           href="/letras"
           aria-current={ruta === '/letras' ? 'page' : undefined}
-          className={`${PILDORA} ${ruta === '/letras' ? ACTIVA : INACTIVA}`}
+          className={`${BOTON} ${ruta === '/letras' ? ACTIVA : INACTIVA}`}
         >
           Letras
         </Link>
@@ -205,7 +205,7 @@ function FilaBusqueda({
           <Link
             href="/letras"
             aria-label={`Quitar el filtro de la letra ${filtro.toUpperCase()}`}
-            className={`${PILDORA} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
+            className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
           >
             {filtro}
             <Cerrar />
@@ -216,12 +216,12 @@ function FilaBusqueda({
   )
 }
 
-// ✕ dentro de un círculo: cierra la píldora activa en la que va (filtro, Colabora, Buscar).
+// ✕ dentro de un cuadrado: cierra la píldora activa en la que va (filtro, Colabora, Buscar).
 function Cerrar() {
   return (
     <span
       aria-hidden="true"
-      className="flex size-5 items-center justify-center rounded-full bg-paper text-ink transition-opacity group-hover:opacity-80"
+      className="flex size-5 items-center justify-center rounded-sm bg-paper text-ink transition-opacity group-hover:opacity-80"
     >
       <svg viewBox="0 0 10 10" className="size-2">
         <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
