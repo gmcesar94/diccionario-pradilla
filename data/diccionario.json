@@ -25,7 +25,6 @@
     { "palabra": "Acequia", "acepciones": [{ "categoria_gramatical": "f.", "definicion": "Zanja o canal por donde se conducen las aguas para regar y para otros fines." }] },
     { "palabra": "Ceremeño", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Fruto: peras pequeñas." }] },
     { "palabra": "Cinto", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Cinturón." }] },
-    { "palabra": "Cinturón", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Cuerda del albornoz." }] },
     { "palabra": "Chonflas", "acepciones": [{ "categoria_gramatical": "adj.", "definicion": "Gordo." }] },
     { "palabra": "Contino", "acepciones": [{ "categoria_gramatical": "adj.", "definicion": "Continuo." }] },
     { "palabra": "Convidar", "acepciones": [{ "categoria_gramatical": "v.", "definicion": "Invitar." }] },
@@ -102,7 +101,7 @@
     { "palabra": "Tajón", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Tajo de madera para partir la carne." }] },
     { "palabra": "Tratante", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Comercial de caballerías." }] },
     { "palabra": "Veros", "acepciones": [{ "categoria_gramatical": "v.", "definicion": "Iros." }] },
-    { "palabra": "Amuelar", "acepciones": [{ "categoria_gramatical": "v.", "definicion": "Fastidiar.", "ejemplo": "Que se amuele. No me amueles." }] },
+    { "palabra": "Amuelar", "acepciones": [{ "categoria_gramatical": "v.", "definicion": "Fastidiar.", "ejemplo": ["Que se amuele.", "No me amueles."] }] },
     { "palabra": "Algarón", "acepciones": [{ "categoria_gramatical": "m.", "definicion": "Nube." }] },
     { "palabra": "Pililla", "acepciones": [{ "categoria_gramatical": "f.", "definicion": "Hueco en una piedra usado para mantener agua limpia y fresca para poder beber mientras trabajaban." }] }
   ]

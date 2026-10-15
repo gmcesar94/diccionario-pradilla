@@ -8,7 +8,7 @@ export default function Entrada({ palabra }: { palabra: Palabra }) {
   return (
     <article
       id={palabra.slug}
-      className="scroll-mt-[calc(var(--alto-cabecera)+4rem)] border-b border-rule px-5 py-5 md:grid md:grid-cols-[12rem_1fr] md:gap-6 md:px-6"
+      className="scroll-mt-[calc(var(--alto-cabecera)+0.5rem)] md:scroll-mt-[calc(var(--alto-cabecera)+4.25rem)] border-b border-rule px-5 py-5 md:grid md:grid-cols-[12rem_1fr] md:gap-6 md:px-6"
     >
       <h2 className="text-lg font-bold leading-snug">{palabra.palabra}</h2>
 
@@ -22,7 +22,12 @@ export default function Entrada({ palabra }: { palabra: Palabra }) {
                 <span className="text-muted">{acep.categoria_gramatical} </span>
               )}
               {acep.definicion}
-              {acep.ejemplo && <p className="italic text-muted">«{acep.ejemplo}»</p>}
+              {/* Un ejemplo por línea */}
+              {acep.ejemplo?.split('\n').map((ejemplo) => (
+                <p key={ejemplo} className="italic text-muted">
+                  «{ejemplo}»
+                </p>
+              ))}
               {acep.sinonimos && acep.sinonimos.length > 0 && (
                 <p className="mt-0.5 text-xs text-muted">Sin.: {acep.sinonimos.join(', ')}.</p>
               )}

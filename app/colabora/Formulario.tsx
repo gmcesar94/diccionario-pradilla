@@ -9,11 +9,10 @@ import { ACTIVA, INACTIVA, BOTON } from '@/lib/estilos'
 
 const FILA = 'border-b border-rule px-5 py-5 md:grid md:grid-cols-[12rem_1fr] md:gap-6 md:px-6'
 const CONTROL =
-  'w-full rounded-md border border-ink bg-paper px-4 text-[0.9375rem] placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ink aria-invalid:border-error aria-invalid:ring-error'
+  'block w-full rounded-md border border-ink bg-paper px-4 text-base placeholder:text-muted md:text-[0.9375rem] focus:outline-none focus:ring-1 focus:ring-ink focus:ring-inset aria-invalid:border-error aria-invalid:ring-error'
 
 const AYUDAS: Partial<Record<Campo, string>> = {
-  categoria_gramatical: 'Por ejemplo: v., m., f., adj.',
-  ejemplo: 'Una frase como se diría en el pueblo.',
+  ejemplo: 'Una frase en la que se use la palabra, como «Mira que te avío». Si tienes varias, escribe una en cada línea.',
 }
 
 const INICIAL: EstadoEnvio = { id: 0, ok: false }
@@ -71,7 +70,8 @@ export default function Formulario({ palabraInicial = '' }: { palabraInicial?: s
                   defaultValue={valor(campo)}
                 />
               ))}
-              {nota && <p className="text-xs text-muted sm:col-span-2">{nota}</p>}
+              {/* -mt-3.5: anula parte del hueco de la rejilla para quedar a 6 px, como las notas de cada campo */}
+              {nota && <p className="-mt-3.5 text-xs text-muted sm:col-span-2">{nota}</p>}
             </div>
           </div>
         )
@@ -122,7 +122,7 @@ function CampoFormulario({ campo, error, defaultValue }: { campo: Campo; error?:
       {campo === 'definicion' || campo === 'ejemplo' ? (
         <textarea {...props} rows={campo === 'definicion' ? 3 : 2} className={`${CONTROL} py-2`} />
       ) : (
-        <input {...props} type="text" className={`${CONTROL} h-10`} />
+        <input {...props} type="text" className={`${CONTROL} h-11 md:h-10`} />
       )}
       {error ? (
         <p id={`${campo}-error`} className="mt-1.5 text-sm text-error">{error}</p>

@@ -1,14 +1,15 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { CampoBusqueda, useBusqueda } from '@/app/components/Buscador'
 import { ACTIVA, INACTIVA, BOTON } from '@/lib/estilos'
 
-// Barra fija con el título y, debajo, la fila del buscador y las pestañas.
-// Cuando esa fila sale de la vista, aparece «Buscar» en la barra fija y,
-// al pulsarlo, la misma fila se despliega bajo la barra.
+// Barra fija con el título y Colabora. Debajo, el buscador solo y, en otra
+// fila, la vista (Listado | Letras). Cuando el buscador sale de la vista,
+// aparece «Buscar» en la barra fija y, al pulsarlo, el buscador se despliega
+// bajo la barra con su propio botón de cerrar.
 export default function Cabecera() {
   return (
     <Suspense fallback={<Vista valor="" />}>
@@ -27,9 +28,9 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
   const router = useRouter()
   const colabora = ruta === '/colabora'
   const barra = useRef<HTMLElement>(null)
+  const fila = useRef<HTMLDivElement>(null)
   // Última vista del diccionario (con su búsqueda), para volver desde Colabora.
   const volverA = useRef('/')
-  const fila = useRef<HTMLDivElement>(null)
   const [compacta, setCompacta] = useState(false)
   const [abierto, setAbierto] = useState(false)
   const abiertoRef = useRef(abierto)
@@ -96,9 +97,9 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
     return () => window.removeEventListener('keydown', alPulsar)
   }, [abierto])
 
-  // En Colabora no hay buscador: solo la barra con la salida de vuelta.
-  const conBotonBuscar = compacta && !colabora
-  const desplegado = conBotonBuscar && abierto
+  // En Colabora no hay buscador ni filas de vista.
+  const desplegado = compacta && !colabora && abierto
+  const conBotonBuscar = compacta && !colabora && !abierto
 
   return (
     <>
@@ -111,23 +112,14 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
           {conBotonBuscar && (
             <button
               type="button"
-              onClick={() => setAbierto((a) => !a)}
-              aria-expanded={desplegado}
+              onClick={() => setAbierto(true)}
+              aria-expanded={false}
               aria-controls="buscador-desplegable"
-              aria-label={desplegado ? 'Cerrar el buscador' : 'Buscar'}
-              className={`${BOTON} ${desplegado ? `${ACTIVA} group gap-2 sm:pr-2.5` : INACTIVA} max-sm:w-10 max-sm:justify-center max-sm:px-0`}
+              aria-label="Buscar"
+              className={`${BOTON} ${INACTIVA} max-sm:w-11 max-sm:justify-center max-sm:px-0`}
             >
-              {desplegado ? (
-                <>
-                  <span className="hidden sm:inline">Buscar</span>
-                  <Cerrar />
-                </>
-              ) : (
-                <>
-                  <Lupa />
-                  <span className="hidden sm:inline">Buscar</span>
-                </>
-              )}
+              <Lupa />
+              <span className="hidden sm:inline">Buscar</span>
             </button>
           )}
 
@@ -152,71 +144,109 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
         </div>
 
         {desplegado && (
-          <div id="buscador-desplegable" className="absolute inset-x-0 top-full bg-paper">
-            <FilaBusqueda ruta={ruta} valor={valor} onBuscar={onBuscar} autoFocus />
+          // top-full cae sobre el borde inferior de la barra: border-t lo vuelve a dibujar
+          // y deja el borde inferior del desplegable alineado con el de la tira de letras.
+          <div id="buscador-desplegable" className="absolute inset-x-0 top-full border-t border-rule bg-paper">
+            <FilaBusqueda valor={valor} onBuscar={onBuscar} autoFocus onCerrar={() => setAbierto(false)} />
           </div>
         )}
       </header>
 
       {!colabora && (
-        <div ref={fila}>
-          <FilaBusqueda ruta={ruta} valor={valor} onBuscar={onBuscar} />
-        </div>
+        <>
+          <div ref={fila}>
+            <FilaBusqueda valor={valor} onBuscar={onBuscar} />
+          </div>
+          <FilaVistas ruta={ruta} />
+        </>
       )}
     </>
   )
 }
 
 function FilaBusqueda({
-  ruta,
   valor,
   onBuscar,
   autoFocus,
+  onCerrar,
 }: {
-  ruta: string
   valor: string
   onBuscar?: (texto: string) => void
   autoFocus?: boolean
+  onCerrar?: () => void
 }) {
-  // En /letra/x el filtro activo es una píldora propia, junto a «Letras», que se cierra con la ✕.
-  const filtro = ruta.startsWith('/letra/') ? decodeURIComponent(ruta.split('/')[2] ?? '') : null
-
   return (
-    <div role="search" className="flex items-center gap-1.5 border-b border-rule px-5 py-3 md:px-6">
+    <div role="search" className="flex gap-1.5 border-b border-rule px-5 py-3 md:px-6">
       <CampoBusqueda valor={valor} onChange={onBuscar} autoFocus={autoFocus} />
-
-      <nav aria-label="Vistas" className="flex gap-1.5">
-        <Link
-          href="/"
-          aria-current={ruta === '/' ? 'page' : undefined}
-          className={`${BOTON} ${ruta === '/' ? ACTIVA : INACTIVA}`}
+      {onCerrar && (
+        <button
+          type="button"
+          onClick={onCerrar}
+          aria-label="Cerrar el buscador"
+          className={`${BOTON} ${ACTIVA} w-11 justify-center px-0! hover:opacity-80 md:w-10`}
         >
-          Listado
-        </Link>
-        <Link
-          href="/letras"
-          aria-current={ruta === '/letras' ? 'page' : undefined}
-          className={`${BOTON} ${ruta === '/letras' ? ACTIVA : INACTIVA}`}
-        >
-          Letras
-        </Link>
-
-        {filtro && (
-          <Link
-            href="/letras"
-            aria-label={`Quitar el filtro de la letra ${filtro.toUpperCase()}`}
-            className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
-          >
-            {filtro}
-            <Cerrar />
-          </Link>
-        )}
-      </nav>
+          {/* Misma caja y trazo que la lupa del campo (16×16, trazo 1.5), con la ✕ ocupándola casi entera */}
+          <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0">
+            <path d="M2.5 2.5l11 11M13.5 2.5l-11 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
 
-// ✕ dentro de un cuadrado: cierra la píldora activa en la que va (filtro, Colabora, Buscar).
+// Vista del diccionario: un filtro al inicio de la página, separado del buscador.
+function FilaVistas({ ruta }: { ruta: string }) {
+  // En /letra/x el filtro activo es una píldora propia, junto a «Letras», que se cierra con la ✕.
+  const filtro = ruta.startsWith('/letra/') ? decodeURIComponent(ruta.split('/')[2] ?? '') : null
+  const ancho = 'max-md:flex-1 max-md:justify-center'
+
+  return (
+    <nav aria-label="Vistas" className="flex gap-1.5 border-b border-rule px-5 py-3 md:px-6">
+      <Pestana href="/" activa={ruta === '/'} className={ancho}>
+        Listado
+      </Pestana>
+      <Pestana href="/letras" activa={ruta === '/letras'} className={ancho}>
+        Letras
+      </Pestana>
+
+      {filtro && (
+        <Link
+          href="/letras"
+          aria-label={`Quitar el filtro de la letra ${filtro.toUpperCase()}`}
+          className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
+        >
+          {filtro}
+          <Cerrar />
+        </Link>
+      )}
+    </nav>
+  )
+}
+
+function Pestana({
+  href,
+  activa,
+  className = '',
+  children,
+}: {
+  href: string
+  activa: boolean
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={activa ? 'page' : undefined}
+      className={`${BOTON} ${activa ? ACTIVA : INACTIVA} ${className}`}
+    >
+      {children}
+    </Link>
+  )
+}
+
+// ✕ dentro de un cuadrado: cierra la píldora activa en la que va (filtro, Colabora).
 function Cerrar() {
   return (
     <span

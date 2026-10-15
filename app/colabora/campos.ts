@@ -1,7 +1,6 @@
 // Campos del formulario «Colabora» y sus límites (los mismos que en supabase/sugerencias.sql).
 export const CAMPOS = {
-  palabra: { etiqueta: 'Palabra', max: 80, obligatorio: true, grupo: 'palabra', ancho: 'medio' },
-  categoria_gramatical: { etiqueta: 'Categoría', max: 30, obligatorio: false, grupo: 'palabra', ancho: 'medio' },
+  palabra: { etiqueta: 'Palabra', max: 80, obligatorio: true, grupo: 'palabra', ancho: 'completo' },
   definicion: { etiqueta: 'Definición', max: 1000, obligatorio: true, grupo: 'palabra', ancho: 'completo' },
   ejemplo: { etiqueta: 'Ejemplo de uso', max: 500, obligatorio: false, grupo: 'palabra', ancho: 'completo' },
   nombre: { etiqueta: 'Nombre', max: 80, obligatorio: false, grupo: 'contacto', ancho: 'medio' },
@@ -12,7 +11,7 @@ export const GRUPOS = {
   palabra: { titulo: 'La palabra', nota: null },
   contacto: {
     titulo: 'Contacto',
-    nota: 'Solo para escribirte si tenemos dudas sobre la palabra. No se publica.',
+    nota: 'Tus datos están protegidos. Solo los usaremos para contactarte si tenemos dudas sobre la palabra.',
   },
 } as const
 

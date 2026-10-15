@@ -39,7 +39,7 @@ export function CampoBusqueda({
   autoFocus?: boolean
 }) {
   return (
-    <label className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border border-ink px-4 text-sm focus-within:ring-1 focus-within:ring-ink">
+    <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-md border border-ink px-4 text-base focus-within:ring-1 focus-within:ring-ink focus-within:ring-inset md:h-10 md:text-sm">
       <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5 shrink-0 text-muted">
         <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
         <path d="m11 11 3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

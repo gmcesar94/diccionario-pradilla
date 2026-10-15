@@ -32,11 +32,14 @@ async function main() {
 
   console.log(`${data.length} propuesta(s) «${estado}». Pégalas en data/diccionario.json:\n`)
   for (const s of data) {
-    const acepcion: Record<string, string | null> = {
+    const acepcion: Record<string, string | string[] | null> = {
       categoria_gramatical: s.categoria_gramatical,
       definicion: s.definicion,
     }
-    if (s.ejemplo) acepcion.ejemplo = s.ejemplo
+    if (s.ejemplo) {
+      const lineas = String(s.ejemplo).split('\n').map((l) => l.trim()).filter(Boolean)
+      acepcion.ejemplo = lineas.length > 1 ? lineas : lineas[0]
+    }
     console.log(`    ${JSON.stringify({ palabra: s.palabra, acepciones: [acepcion] })},`)
     if (s.nombre || s.contacto) console.error(`      ↳ propuesta por ${[s.nombre, s.contacto].filter(Boolean).join(' · ')}`)
   }

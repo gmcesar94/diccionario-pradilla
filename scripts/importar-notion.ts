@@ -56,6 +56,15 @@ function lista(valor: unknown): string[] {
   return t ? t.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : []
 }
 
+// Uno o varios ejemplos (texto o lista). Se guardan en una sola columna,
+// un ejemplo por línea, y la web pinta cada línea por separado.
+function ejemplos(valor: unknown): string | null {
+  const lineas = (Array.isArray(valor) ? valor : String(valor ?? '').split('\n'))
+    .map((v) => String(v).trim().replace(/^["“”«»]+|["“”«»]+$/g, '').trim())
+    .filter(Boolean)
+  return lineas.length > 0 ? lineas.join('\n') : null
+}
+
 function mapearAcepcion(raw: Obj, indice: number): AcepcionImport {
   const numero = Number(campo(raw, 'numero', 'n', 'num', 'orden'))
   return {
@@ -63,7 +72,7 @@ function mapearAcepcion(raw: Obj, indice: number): AcepcionImport {
     categoria_gramatical: texto(campo(raw, 'categoria_gramatical', 'categoria', 'cat', 'tipo')),
     definicion: texto(campo(raw, 'definicion', 'texto', 'significado')) ?? '',
     sinonimos: lista(campo(raw, 'sinonimos', 'sin')),
-    ejemplo: texto(campo(raw, 'ejemplo', 'ejemplos', 'uso'))?.replace(/^["“”«»]+|["“”«»]+$/g, '') ?? null,
+    ejemplo: ejemplos(campo(raw, 'ejemplo', 'ejemplos', 'uso')),
   }
 }
 

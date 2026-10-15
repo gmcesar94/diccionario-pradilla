@@ -4,7 +4,7 @@ import { LETRAS } from '@/lib/letras'
 // Abecedario completo; las letras sin palabras se muestran apagadas.
 export default function CuadriculaLetras({ recuento }: { recuento: Record<string, number> }) {
   return (
-    <ul className="grid grid-cols-5 gap-2 px-5 py-5 sm:grid-cols-7 md:gap-2.5 md:px-6">
+    <ul className="grid grid-cols-4 gap-2 px-5 py-5 sm:grid-cols-7 md:gap-2.5 md:px-6">
       {LETRAS.map((letra) => {
         const total = recuento[letra] ?? 0
         const base =

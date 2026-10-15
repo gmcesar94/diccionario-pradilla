@@ -43,23 +43,29 @@ function Lista({
   return (
     <>
       {conIndice && <IndiceLetras recuento={contarPorLetra(palabras)} />}
-      <p className="px-5 pt-5 text-sm text-muted md:px-6">
-        {visibles.length} {visibles.length === 1 ? 'palabra' : 'palabras'}
-      </p>
-      {visibles.map((palabra, i) => {
-        const letra = letraDe(palabra.palabra)
-        const nuevaLetra = conIndice && (i === 0 || letraDe(visibles[i - 1].palabra) !== letra)
-        return (
-          <Fragment key={palabra.id}>
-            {nuevaLetra && (
-              <h2 id={`letra-${letra}`} data-letra={letra} className="scroll-mt-[calc(var(--alto-cabecera)+4rem)] border-b border-rule px-5 pt-8 pb-2 text-sm font-semibold uppercase text-muted md:px-6">
-                {letra}
-              </h2>
-            )}
-            <Entrada palabra={palabra} />
-          </Fragment>
-        )
-      })}
+      <div>
+        <p className="px-5 pt-5 text-sm text-muted md:px-6">
+          {visibles.length} {visibles.length === 1 ? 'palabra' : 'palabras'}
+        </p>
+        {visibles.map((palabra, i) => {
+          const letra = letraDe(palabra.palabra)
+          const nuevaLetra = conIndice && (i === 0 || letraDe(visibles[i - 1].palabra) !== letra)
+          return (
+            <Fragment key={palabra.id}>
+              {nuevaLetra && (
+                <h2
+                  id={`letra-${letra}`}
+                  data-letra={letra}
+                  className="scroll-mt-[calc(var(--alto-cabecera)+0.5rem)] md:scroll-mt-[calc(var(--alto-cabecera)+4.25rem)] border-b border-rule px-5 pt-8 pb-2 text-sm font-semibold uppercase text-muted md:px-6"
+                >
+                  {letra}
+                </h2>
+              )}
+              <Entrada palabra={palabra} />
+            </Fragment>
+          )
+        })}
+      </div>
     </>
   )
 }
@@ -70,10 +76,7 @@ function SinResultados({ texto }: { texto: string }) {
     <div className="px-5 py-12 text-center md:px-6">
       <p className="text-muted">No se han encontrado palabras.</p>
       {texto && (
-        <Link
-          href={`/colabora?palabra=${encodeURIComponent(texto)}`}
-          className={`${BOTON} ${INACTIVA} mt-4`}
-        >
+        <Link href={`/colabora?palabra=${encodeURIComponent(texto)}`} className={`${BOTON} ${INACTIVA} mt-4`}>
           ¿Falta «{texto}»? Propónla
         </Link>
       )}
