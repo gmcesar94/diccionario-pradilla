@@ -2,6 +2,7 @@
 
 import { supabaseServidor } from '@/lib/supabase-servidor'
 import { CAMPOS, type Campo, type EstadoEnvio } from '@/app/colabora/campos'
+import { emailSugerencia } from '@/lib/emailSugerencia'
 
 export async function proponerPalabra(_anterior: EstadoEnvio, formData: FormData): Promise<EstadoEnvio> {
   const id = Date.now()
@@ -24,21 +25,23 @@ export async function proponerPalabra(_anterior: EstadoEnvio, formData: FormData
   )
   // Cualquier fallo (Supabase, red, variables de entorno sin cargar) acaba en el
   // mensaje amable del formulario, nunca en la pantalla de error de Next.
+  let guardada: string
   try {
-    const { error } = await supabaseServidor().from('sugerencias').insert(fila)
+    const { data, error } = await supabaseServidor().from('sugerencias').insert(fila).select('id').single()
     if (error) throw error
+    guardada = data.id
   } catch (error) {
     console.error('Error guardando la sugerencia:', error)
     return { id, ok: false, valores, error: 'No se ha podido enviar. Inténtalo de nuevo en un rato.' }
   }
 
-  await avisarPorEmail(valores)
+  await avisarPorEmail(guardada, valores)
   return { id, ok: true, palabra: valores.palabra }
 }
 
 // Aviso por email con Resend. Si no está configurado o falla, la propuesta
 // ya está guardada en Supabase, así que solo se anota en la consola.
-async function avisarPorEmail(valores: Record<Campo, string>) {
+async function avisarPorEmail(id: string, valores: Record<Campo, string>) {
   const clave = process.env.RESEND_API_KEY
   const destino = process.env.AVISO_EMAIL
   if (!clave || !destino) {
@@ -46,9 +49,8 @@ async function avisarPorEmail(valores: Record<Campo, string>) {
     return
   }
 
-  const texto = (Object.keys(CAMPOS) as Campo[])
-    .map((campo) => `${CAMPOS[campo].etiqueta}: ${valores[campo] || '—'}`)
-    .join('\n')
+  // Con enlaces a Supabase y el SQL ya preparado para añadir la palabra (ver lib/emailSugerencia.ts).
+  const email = emailSugerencia({ id, ...valores }, process.env.NEXT_PUBLIC_SUPABASE_URL ?? '')
 
   try {
     const respuesta = await fetch('https://api.resend.com/emails', {
@@ -57,8 +59,9 @@ async function avisarPorEmail(valores: Record<Campo, string>) {
       body: JSON.stringify({
         from: 'ABC Pradilla <onboarding@resend.dev>',
         to: [destino],
-        subject: `Nueva palabra propuesta: ${valores.palabra}`,
-        text: `${texto}\n\nRevísala en Supabase → Table Editor → sugerencias.`,
+        subject: email.subject,
+        text: email.text,
+        html: email.html,
       }),
     })
     if (!respuesta.ok) console.error('Resend respondió', respuesta.status, await respuesta.text())
