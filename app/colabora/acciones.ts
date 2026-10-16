@@ -41,7 +41,10 @@ export async function proponerPalabra(_anterior: EstadoEnvio, formData: FormData
 async function avisarPorEmail(valores: Record<Campo, string>) {
   const clave = process.env.RESEND_API_KEY
   const destino = process.env.AVISO_EMAIL
-  if (!clave || !destino) return
+  if (!clave || !destino) {
+    console.error('Aviso por email desactivado: faltan RESEND_API_KEY o AVISO_EMAIL')
+    return
+  }
 
   const texto = (Object.keys(CAMPOS) as Campo[])
     .map((campo) => `${CAMPOS[campo].etiqueta}: ${valores[campo] || '—'}`)
