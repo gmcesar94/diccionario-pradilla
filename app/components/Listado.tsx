@@ -2,13 +2,14 @@
 
 import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Entrada from '@/app/components/Entrada'
 import { Cerrar } from '@/app/components/iconos'
 import { ACTIVA, INACTIVA, BOTON } from '@/lib/estilos'
 import { letraDe } from '@/lib/letras'
 import { femenino, slugify } from '@/lib/normalizar'
 import type { Palabra } from '@/lib/types'
+import { volver } from '@/lib/volver'
 
 interface Props {
   palabras: Palabra[]
@@ -25,7 +26,13 @@ export default function Listado(props: Props) {
   const parametros = useSearchParams()
   const q = parametros.get('q') ?? ''
   return (
-    <Lista {...props} consulta={slugify(q)} textoBuscado={q.trim()} soloPalabra={parametros.get('palabra')} />
+    <Lista
+      {...props}
+      consulta={slugify(q)}
+      textoBuscado={q.trim()}
+      soloPalabra={parametros.get('palabra')}
+      desdeEnlace={parametros.get('desde') === 'enlace'}
+    />
   )
 }
 
@@ -42,8 +49,11 @@ function Lista({
   consulta,
   textoBuscado = '',
   soloPalabra = null,
-}: Props & { consulta: string; textoBuscado?: string; soloPalabra?: string | null }) {
-  // ?palabra=slug (desde la palabra del día): solo esa palabra, coincidencia exacta.
+  desdeEnlace = false,
+}: Props & { consulta: string; textoBuscado?: string; soloPalabra?: string | null; desdeEnlace?: boolean }) {
+  const router = useRouter()
+  // ?palabra=slug (palabra del día o palabra enlazada en una definición): solo esa palabra.
+  // Con &desde=enlace el chip lleva el nombre de la palabra y la ✕ vuelve a donde estabas.
   const unica = soloPalabra ? palabras.find((p) => p.slug === soloPalabra) : undefined
   // También encuentra el femenino de los adjetivos («ranera» → «Ranero, ra»).
   const visibles = unica
@@ -65,18 +75,26 @@ function Lista({
       <div>
         {/* Se anuncia a los lectores de pantalla cuando cambia (al buscar) */}
         {unica ? (
-          // Filtro de la palabra del día. Escritorio: chip que se quita con la ✕.
-          // Móvil y tableta: título; la ✕ está arriba a la derecha, en la cabecera.
-          <div className="px-margen pt-5">
+          // Una sola palabra. Escritorio: chip que se quita con la ✕.
+          // Móvil y tableta: la ✕ está arriba a la derecha, en la cabecera.
+          <div className={`px-margen pt-5 ${desdeEnlace ? 'max-lg:hidden' : ''}`}>
             <Link
               href="/"
-              aria-label={`Quitar el filtro de la palabra del día (${unica.palabra})`}
+              onClick={(e) => {
+                e.preventDefault()
+                volver(router)
+              }}
+              aria-label={
+                desdeEnlace
+                  ? `Cerrar «${unica.palabra}» y volver`
+                  : `Quitar el filtro de la palabra del día (${unica.palabra})`
+              }
               className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 max-lg:hidden sm:pr-2.5`}
             >
-              Palabra del día
+              {desdeEnlace ? unica.palabra : 'Palabra del día'}
               <Cerrar />
             </Link>
-            <h2 className="text-xl font-medium lg:hidden">Palabra del día</h2>
+            {!desdeEnlace && <h2 className="text-xl font-medium lg:hidden">Palabra del día</h2>}
           </div>
         ) : (
           <p role="status" aria-live="polite" className="px-margen pt-5 text-sm text-muted">

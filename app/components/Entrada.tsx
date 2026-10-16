@@ -1,3 +1,4 @@
+import Enlace from '@/app/components/EnlacePalabra'
 import { slugify } from '@/lib/normalizar'
 import type { Palabra } from '@/lib/types'
 
@@ -77,21 +78,8 @@ function TextoEnlazado({ texto, slugs, propio }: { texto: string; slugs?: Set<st
   )
 }
 
-// Si el sinónimo es una palabra del diccionario, enlaza a su entrada en el listado.
-// Es un enlace dentro del texto: no se amplía a 48 px (excepción de WCAG para enlaces en línea).
-// <a> y no <Link>: navegación normal, así el listado lee el #palabra al cargar y la resalta.
+// Si el sinónimo es una palabra del diccionario, enlaza a su entrada.
 function Sinonimo({ texto, existe }: { texto: string; existe: boolean }) {
   if (!existe) return <>{texto}</>
   return <Enlace slug={slugify(texto)} texto={texto} />
-}
-
-function Enlace({ slug, texto }: { slug: string; texto: string }) {
-  return (
-    <a
-      href={`/#${slug}`}
-      className="text-ink underline underline-offset-2 transition-opacity hover:no-underline active:opacity-70"
-    >
-      {texto}
-    </a>
-  )
 }

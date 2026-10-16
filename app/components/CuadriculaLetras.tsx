@@ -1,50 +1,74 @@
+'use client'
+
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
 import { PULSADO } from '@/lib/estilos'
 import { LETRAS } from '@/lib/letras'
 
-// Columnas × filas según la forma de la pantalla (27 letras):
-// - vertical (móvil): 4 × 7; vertical desde sm (tableta): 5 × 6;
-// - horizontal (escritorio, móvil tumbado): 9 × 3.
+// Columnas iniciales (antes de medir) según la forma de la pantalla.
 const REJILLA =
-  '[--cols:4] [--filas:7] sm:portrait:[--cols:5] sm:portrait:[--filas:6] landscape:[--cols:9] landscape:[--filas:3] [--hueco:8px] md:[--hueco:10px]'
+  '[--cols:4] sm:portrait:[--cols:5] landscape:[--cols:9] [--hueco:8px] md:[--hueco:10px]'
 
-// La cuadrícula ocupa siempre el ancho entre los márgenes de la web y cabe sin scroll:
-// - alto libre: la pantalla bajo la barra fija, el buscador (móvil) o la fila de buscador
-//   y letras (escritorio), menos el padding (2 × 20 px);
-// - alto con casillas cuadradas: el que saldría repartiendo el ancho (100cqw del contenedor);
-// - se usa el menor de los dos. Si la pantalla es baja, las casillas se ensanchan en vez
-//   de dejar huecos a los lados;
-// - mínimo 48 px de alto por casilla.
-const ESTILO = {
-  '--alto-libre': 'calc(100dvh - var(--alto-cabecera) - var(--alto-busqueda) - var(--alto-indice) - 40px)',
-  '--alto-cuadrado': 'calc((100cqw - (var(--cols) - 1) * var(--hueco)) / var(--cols) * var(--filas) + (var(--filas) - 1) * var(--hueco))',
-  // Nunca casillas de menos de 48 px de alto (área táctil): en pantallas muy bajas, algo de scroll.
-  '--alto-rejilla':
-    'max(min(var(--alto-libre), var(--alto-cuadrado)), calc(48px * var(--filas) + (var(--filas) - 1) * var(--hueco)))',
-  // Alto de cada fila: es el lado corto de la casilla, la medida para letra, número y esquinas.
-  '--lado': 'calc((var(--alto-rejilla) - (var(--filas) - 1) * var(--hueco)) / var(--filas))',
-  height: 'var(--alto-rejilla)',
-} as CSSProperties
+// Casillas siempre cuadradas y cuadrícula de margen a margen. Lo que se adapta es el
+// número de columnas: el menor con el que la cuadrícula, ocupando todo el ancho, cabe a
+// lo alto (casillas lo más grandes posible). Nunca casillas de menos de 48 px: en una
+// pantalla extremadamente baja, antes un poco de scroll que casillas más pequeñas.
+function elegirColumnas(ancho: number, alto: number, hueco: number): number {
+  let elegidas = 3
+  for (let cols = 3; cols <= LETRAS.length; cols++) {
+    const lado = (ancho - (cols - 1) * hueco) / cols
+    if (lado < 48) break
+    elegidas = cols
+    const filas = Math.ceil(LETRAS.length / cols)
+    if (filas * lado + (filas - 1) * hueco <= alto) break
+  }
+  return elegidas
+}
 
 // Abecedario completo; las letras sin palabras se muestran apagadas.
 export default function CuadriculaLetras({ recuento }: { recuento: Record<string, number> }) {
+  const lista = useRef<HTMLUListElement>(null)
+  const [cols, setCols] = useState<number | null>(null)
+
+  useEffect(() => {
+    const ul = lista.current
+    if (!ul) return
+    const medir = () => {
+      const raiz = getComputedStyle(document.documentElement)
+      const px = (nombre: string) => parseFloat(raiz.getPropertyValue(nombre)) || 0
+      // Alto libre bajo la barra fija, el buscador (móvil) o la fila de buscador y letras (escritorio).
+      const alto = window.innerHeight - px('--alto-cabecera') - px('--alto-busqueda') - px('--alto-indice') - 40
+      const hueco = parseFloat(getComputedStyle(ul).columnGap) || 8
+      setCols(elegirColumnas(ul.clientWidth, alto, hueco))
+    }
+    medir()
+    const observador = new ResizeObserver(medir)
+    observador.observe(ul)
+    window.addEventListener('resize', medir)
+    return () => {
+      observador.disconnect()
+      window.removeEventListener('resize', medir)
+    }
+  }, [])
+
   return (
-    <div className="@container px-margen py-5">
+    <div className="px-margen py-5">
       <ul
-        className={`${REJILLA} grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] grid-rows-[repeat(var(--filas),minmax(0,1fr))] gap-(--hueco)`}
-        style={ESTILO}
+        ref={lista}
+        className={`${REJILLA} grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-(--hueco)`}
+        style={cols ? ({ '--cols': cols } as CSSProperties) : undefined}
       >
         {LETRAS.map((letra) => {
           const total = recuento[letra] ?? 0
+          // @container: la letra, el número y las esquinas se escalan con la casilla.
           const base =
-            'group relative flex h-full items-center justify-center rounded-[calc(var(--lado)*0.12)] border text-[calc(var(--lado)*0.36)] leading-none'
+            '@container group relative flex aspect-square items-center justify-center rounded-[12%] border leading-none'
 
           if (total === 0) {
             return (
               <li key={letra}>
                 <span className={`${base} border-rule text-rule`}>
-                  {letra}
+                  <span className="text-[36cqw]">{letra}</span>
                   <span className="sr-only"> (sin palabras)</span>
                 </span>
               </li>
@@ -58,8 +82,8 @@ export default function CuadriculaLetras({ recuento }: { recuento: Record<string
                 aria-label={`${letra.toUpperCase()}, ${total} ${total === 1 ? 'palabra' : 'palabras'}`}
                 className={`${base} ${PULSADO} border-ink transition-[color,background-color,opacity] duration-100 hover:bg-ink hover:text-paper`}
               >
-                {letra}
-                <span className="absolute top-[calc(var(--lado)*0.07)] right-[calc(var(--lado)*0.09)] text-[clamp(10px,calc(var(--lado)*0.1),14px)] text-muted transition-colors group-hover:text-paper/70">
+                <span className="text-[36cqw]">{letra}</span>
+                <span className="absolute top-[7cqw] right-[9cqw] text-[clamp(10px,10cqw,14px)] text-muted transition-colors group-hover:text-paper/70">
                   {total}
                 </span>
               </Link>

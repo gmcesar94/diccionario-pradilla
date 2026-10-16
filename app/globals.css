@@ -13,7 +13,7 @@
   --acento: #7df079;
   /* Las ajustan Cabecera.tsx y FiltroLetras.tsx al medir la barra fija, el buscador y la fila de letras */
   --alto-cabecera: 65px;
-  --alto-indice: 65px;
+  --alto-indice: 0px;
   --alto-busqueda: 65px;
   /* Ancho del bloque de letras del panel de escritorio (lo mide PanelBusqueda.tsx) */
   --ancho-letras: 34rem;

@@ -22,8 +22,12 @@ export async function proponerPalabra(_anterior: EstadoEnvio, formData: FormData
   const fila = Object.fromEntries(
     Object.entries(valores).map(([campo, valor]) => [campo, valor || null])
   )
-  const { error } = await supabaseServidor().from('sugerencias').insert(fila)
-  if (error) {
+  // Cualquier fallo (Supabase, red, variables de entorno sin cargar) acaba en el
+  // mensaje amable del formulario, nunca en la pantalla de error de Next.
+  try {
+    const { error } = await supabaseServidor().from('sugerencias').insert(fila)
+    if (error) throw error
+  } catch (error) {
     console.error('Error guardando la sugerencia:', error)
     return { id, ok: false, valores, error: 'No se ha podido enviar. Inténtalo de nuevo en un rato.' }
   }

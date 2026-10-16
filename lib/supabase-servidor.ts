@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 // Cliente con la clave secreta. Solo para código de servidor (Server Actions):
 // nunca importarlo desde un componente de cliente.
 export function supabaseServidor() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   if (!url || !key) {
     throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local')
   }

@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { CampoBusqueda, useBusqueda } from '@/app/components/Buscador'
 import PanelBusqueda from '@/app/components/PanelBusqueda'
 import { Cerrar, IconoCerrar, Lupa } from '@/app/components/iconos'
+import { volver } from '@/lib/volver'
 import { ACTIVA_OSCURO, INACTIVA_OSCURO, BOTON, PULSADO, VERDE } from '@/lib/estilos'
 
 // Barra fija con el título y Colabora. Debajo, el buscador. La navegación por
@@ -24,8 +25,18 @@ export default function Cabecera({ recuento }: { recuento: Record<string, number
 function ConBusqueda({ recuento }: { recuento: Record<string, number> }) {
   const [valor, buscar] = useBusqueda()
   // ?palabra=slug: el listado muestra una sola palabra y «Todas» no está activa.
-  const filtrandoPalabra = useSearchParams().has('palabra')
-  return <Vista valor={valor} onBuscar={buscar} recuento={recuento} filtrandoPalabra={filtrandoPalabra} />
+  const parametros = useSearchParams()
+  const filtrandoPalabra = parametros.has('palabra')
+  const desdeEnlace = filtrandoPalabra && parametros.get('desde') === 'enlace'
+  return (
+    <Vista
+      valor={valor}
+      onBuscar={buscar}
+      recuento={recuento}
+      filtrandoPalabra={filtrandoPalabra}
+      desdeEnlace={desdeEnlace}
+    />
+  )
 }
 
 function Vista({
@@ -33,11 +44,14 @@ function Vista({
   onBuscar,
   recuento,
   filtrandoPalabra = false,
+  desdeEnlace = false,
 }: {
   valor: string
   onBuscar?: (texto: string) => void
   recuento: Record<string, number>
   filtrandoPalabra?: boolean
+  // La palabra se abrió desde un enlace de otra definición: la ✕ vuelve allí.
+  desdeEnlace?: boolean
 }) {
   const ruta = usePathname()
   const router = useRouter()
@@ -179,11 +193,15 @@ function Vista({
           )}
 
           {/* Índice: activo, la ✕ vuelve a la vista anterior del diccionario (también en móvil, donde es la salida) */}
-          {/* Palabra del día en móvil y tableta: como una ventana, solo la ✕ (en escritorio, el chip del listado) */}
+          {/* Una sola palabra (del día o enlazada) en móvil y tableta: como una ventana, solo la ✕ (en escritorio, el chip del listado) */}
           {filtrandoPalabra && (
             <Link
               href="/"
-              aria-label="Cerrar la palabra del día y volver al diccionario"
+              onClick={(e) => {
+                e.preventDefault()
+                volver(router)
+              }}
+              aria-label={desdeEnlace ? 'Cerrar la palabra y volver' : 'Cerrar la palabra del día y volver al diccionario'}
               className={`${BOTON} ${ACTIVA_OSCURO} ${COMO_VENTANA} lg:hidden`}
             >
               <IconoCerrar />
