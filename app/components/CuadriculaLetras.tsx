@@ -6,6 +6,7 @@ import { PULSADO } from '@/lib/estilos'
 import { LETRAS } from '@/lib/letras'
 
 // Columnas iniciales (antes de medir) según la forma de la pantalla.
+// En móvil en vertical siempre 4 (ver <CuadriculaLetras>).
 const REJILLA =
   '[--cols:4] sm:portrait:[--cols:5] landscape:[--cols:9] [--hueco:8px] md:[--hueco:10px]'
 
@@ -25,10 +26,16 @@ function elegirColumnas(ancho: number, alto: number, hueco: number): number {
   return elegidas
 }
 
+// Móvil en vertical: siempre 4 columnas. Si a lo alto no caben, las casillas se
+// encogen (siguen cuadradas) y la cuadrícula, algo más estrecha que los márgenes, se centra.
+const MOVIL = '(max-width: 639px) and (orientation: portrait)'
+
 // Abecedario completo; las letras sin palabras se muestran apagadas.
 export default function CuadriculaLetras({ recuento }: { recuento: Record<string, number> }) {
   const lista = useRef<HTMLUListElement>(null)
   const [cols, setCols] = useState<number | null>(null)
+  // Lado de la casilla en móvil (null: casillas de margen a margen).
+  const [lado, setLado] = useState<number | null>(null)
 
   useEffect(() => {
     const ul = lista.current
@@ -39,11 +46,25 @@ export default function CuadriculaLetras({ recuento }: { recuento: Record<string
       // Alto libre bajo la barra fija, el buscador (móvil) o la fila de buscador y letras (escritorio).
       const alto = window.innerHeight - px('--alto-cabecera') - px('--alto-busqueda') - px('--alto-indice') - 40
       const hueco = parseFloat(getComputedStyle(ul).columnGap) || 8
-      setCols(elegirColumnas(ul.clientWidth, alto, hueco))
+      // Ancho disponible (el del contenedor sin márgenes): la lista puede ser más estrecha.
+      const caja = ul.parentElement ?? ul
+      const estilo = getComputedStyle(caja)
+      const ancho = caja.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight)
+      if (window.matchMedia(MOVIL).matches) {
+        const filas = Math.ceil(LETRAS.length / 4)
+        const porAncho = (ancho - 3 * hueco) / 4
+        const porAlto = (alto - (filas - 1) * hueco) / filas
+        setCols(4)
+        // Nunca menos de 48 px: en una pantalla muy baja, antes un poco de scroll.
+        setLado(porAlto < porAncho ? Math.floor(Math.max(48, porAlto)) : null)
+      } else {
+        setCols(elegirColumnas(ancho, alto, hueco))
+        setLado(null)
+      }
     }
     medir()
     const observador = new ResizeObserver(medir)
-    observador.observe(ul)
+    observador.observe(ul.parentElement ?? ul)
     window.addEventListener('resize', medir)
     return () => {
       observador.disconnect()
@@ -55,8 +76,12 @@ export default function CuadriculaLetras({ recuento }: { recuento: Record<string
     <div className="px-margen py-5">
       <ul
         ref={lista}
-        className={`${REJILLA} grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-(--hueco)`}
-        style={cols ? ({ '--cols': cols } as CSSProperties) : undefined}
+        className={`${REJILLA} grid grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-(--hueco) max-sm:portrait:[--cols:4] ${lado ? 'mx-auto' : ''}`}
+        style={
+          cols
+            ? ({ '--cols': cols, width: lado ? `calc(${lado * 4}px + 3 * var(--hueco))` : undefined } as CSSProperties)
+            : undefined
+        }
       >
         {LETRAS.map((letra) => {
           const total = recuento[letra] ?? 0
