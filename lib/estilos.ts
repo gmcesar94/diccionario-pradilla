@@ -18,4 +18,10 @@ export const ACTIVA_OSCURO = 'border-paper bg-paper text-oscuro hover:opacity-85
 export const INACTIVA_OSCURO = 'border-paper/70 text-paper hover:bg-paper hover:text-oscuro'
 
 // Llamada a la acción principal (Colabora), en el verde de la marca.
+// Sin contorno sobre la franja oscura (lupa e Índice de la barra): solo Colabora va con fondo.
+export const SIN_BORDE_OSCURO = 'border-transparent text-paper hover:bg-paper/15'
 export const VERDE = 'border-acento bg-acento text-oscuro hover:opacity-85'
+
+// Botones de la barra fija (Índice, Colabora, Buscar, ✕): más discretos, 36 px de alto
+// siempre. La zona táctil invisible llega a 48 px de alto (36 + 6 + 6); a lo ancho, 4 px por lado para no solaparse con 8 px de separación.
+export const BOTON_CABECERA = `relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm whitespace-nowrap transition-[color,background-color,opacity] duration-100 after:absolute after:-inset-x-1 after:-inset-y-1.5 after:content-[''] sm:px-3.5 ${PULSADO}`

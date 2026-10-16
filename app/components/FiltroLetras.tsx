@@ -86,15 +86,17 @@ export default function FiltroLetras({
       <nav
         ref={tira}
         aria-label="Letras"
-        className={`sticky top-(--alto-cabecera) z-10 bg-oscuro text-paper transition-transform lg:hidden duration-200 motion-reduce:transition-none ${
+        // pt-4 + -mt-4: en reposo sigue a 16 px del buscador (se monta sobre su margen inferior,
+        // del mismo color) y, fija bajo la barra, conserva 16 px de aire y la barra no la tapa.
+        className={`sticky top-(--alto-cabecera) z-10 -mt-4 bg-oscuro text-paper transition-transform lg:hidden duration-200 motion-reduce:transition-none ${
           oculta ? 'max-md:-translate-y-full' : ''
         }`}
       >
-        <div className="flex gap-2 px-margen pt-1 pb-6">
+        <div className="flex gap-2 px-margen pt-4 pb-6">
           <Link
             href="/"
             aria-current={activa === null ? 'page' : undefined}
-            className={`${BOTON} ${activa === null ? ACTIVA_OSCURO : INACTIVA_OSCURO} flex-1 justify-center`}
+            className={`${BOTON} h-11! ${activa === null ? ACTIVA_OSCURO : INACTIVA_OSCURO} flex-1 justify-center`}
           >
             Todas
           </Link>
@@ -102,7 +104,7 @@ export default function FiltroLetras({
           <Link
             href="/letras"
             aria-label="Por letra: elegir una letra"
-            className={`${BOTON} ${INACTIVA_OSCURO} flex-1 justify-center`}
+            className={`${BOTON} h-11! ${INACTIVA_OSCURO} flex-1 justify-center`}
           >
             Por letra
           </Link>
@@ -111,7 +113,7 @@ export default function FiltroLetras({
             <Link
               href="/"
               aria-label={`Quitar el filtro de la letra ${activa.toUpperCase()}`}
-              className={`${BOTON} ${ACTIVA_OSCURO} group gap-2 pr-2.5 sm:pr-2.5`}
+              className={`${BOTON} h-11! ${ACTIVA_OSCURO} group gap-2 pr-2.5 sm:pr-2.5`}
             >
               {activa.toUpperCase()}
               <Cerrar invertido />
