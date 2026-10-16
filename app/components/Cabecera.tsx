@@ -347,7 +347,7 @@ function Introduccion() {
         <span className="block font-serif text-[2.5rem] lg:text-[3.5rem]">Diccionario</span>
         <span className="block text-[2.25rem] font-medium tracking-tight lg:text-[3.25rem]">de Pradilla</span>
       </h1>
-      <p className="mt-5 max-w-[46ch] text-base leading-relaxed text-paper/85 lg:mt-[3px] lg:max-w-[40ch] lg:text-lg lg:leading-[1.53]">
+      <p className="mt-5 max-w-[46ch] text-base leading-relaxed text-paper/85 lg:mt-[3px] lg:max-w-[52ch] lg:text-lg lg:leading-[1.6]">
         El patrimonio léxico de Pradilla reunido para conservar nuestra memoria. Busca una palabra, explora el
         diccionario por letras o propón las que conozcas.
       </p>
