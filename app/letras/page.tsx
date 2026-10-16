@@ -3,9 +3,14 @@ import CuadriculaLetras from '@/app/components/CuadriculaLetras'
 import { getPalabras } from '@/lib/datos'
 import { contarPorLetra } from '@/lib/letras'
 
-export const metadata: Metadata = { title: 'Letras · ABC Pradilla' }
+export const metadata: Metadata = { title: 'Índice · ABC Pradilla' }
 
 export default async function Letras() {
   const palabras = await getPalabras()
-  return <CuadriculaLetras recuento={contarPorLetra(palabras)} />
+  return (
+    <>
+      <h1 className="sr-only">Índice de letras</h1>
+      <CuadriculaLetras recuento={contarPorLetra(palabras)} />
+    </>
+  )
 }

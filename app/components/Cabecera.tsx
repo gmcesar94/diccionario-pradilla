@@ -1,35 +1,56 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { CampoBusqueda, useBusqueda } from '@/app/components/Buscador'
-import { ACTIVA, INACTIVA, BOTON } from '@/lib/estilos'
+import PanelBusqueda from '@/app/components/PanelBusqueda'
+import { Cerrar, IconoCerrar, Lupa } from '@/app/components/iconos'
+import { ACTIVA_OSCURO, INACTIVA_OSCURO, BOTON, PULSADO, VERDE } from '@/lib/estilos'
 
-// Barra fija con el título y Colabora. Debajo, el buscador solo y, en otra
-// fila, la vista (Listado | Letras). Cuando el buscador sale de la vista,
+// Barra fija con el título y Colabora. Debajo, el buscador. La navegación por
+// letras está en <FiltroLetras>, en cada página. Cuando el buscador sale de la vista,
 // aparece «Buscar» en la barra fija y, al pulsarlo, el buscador se despliega
 // bajo la barra con su propio botón de cerrar.
-export default function Cabecera() {
+// En escritorio, buscador y letras van juntos en <PanelBusqueda>, dentro de la barra fija.
+export default function Cabecera({ recuento }: { recuento: Record<string, number> }) {
   return (
-    <Suspense fallback={<Vista valor="" />}>
-      <ConBusqueda />
+    <Suspense fallback={<Vista valor="" recuento={recuento} />}>
+      <ConBusqueda recuento={recuento} />
     </Suspense>
   )
 }
 
-function ConBusqueda() {
+function ConBusqueda({ recuento }: { recuento: Record<string, number> }) {
   const [valor, buscar] = useBusqueda()
-  return <Vista valor={valor} onBuscar={buscar} />
+  // ?palabra=slug: el listado muestra una sola palabra y «Todas» no está activa.
+  const filtrandoPalabra = useSearchParams().has('palabra')
+  return <Vista valor={valor} onBuscar={buscar} recuento={recuento} filtrandoPalabra={filtrandoPalabra} />
 }
 
-function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) => void }) {
+function Vista({
+  valor,
+  onBuscar,
+  recuento,
+  filtrandoPalabra = false,
+}: {
+  valor: string
+  onBuscar?: (texto: string) => void
+  recuento: Record<string, number>
+  filtrandoPalabra?: boolean
+}) {
   const ruta = usePathname()
   const router = useRouter()
   const colabora = ruta === '/colabora'
+  const indice = ruta === '/letras'
+  // Vista que se abre como una ventana: sin buscador ni letras, con ✕ para volver.
+  const ventana = colabora
   const barra = useRef<HTMLElement>(null)
   const fila = useRef<HTMLDivElement>(null)
-  // Última vista del diccionario (con su búsqueda), para volver desde Colabora.
+  const botonBuscar = useRef<HTMLButtonElement>(null)
+  // Para devolver el foco a «Buscar» solo cuando el desplegable se cierra a mano.
+  const cerradoAMano = useRef(false)
+  // Última vista del diccionario (con su búsqueda), para volver desde Colabora o el Índice.
   const volverA = useRef('/')
   const [compacta, setCompacta] = useState(false)
   const [abierto, setAbierto] = useState(false)
@@ -44,11 +65,21 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
 
   useEffect(() => {
     abiertoRef.current = abierto
+    // Al cerrar con el botón o con Escape, el foco vuelve a «Buscar».
+    if (!abierto && cerradoAMano.current) {
+      cerradoAMano.current = false
+      botonBuscar.current?.focus()
+    }
   }, [abierto])
 
+  const cerrarDesplegable = () => {
+    cerradoAMano.current = true
+    setAbierto(false)
+  }
+
   useEffect(() => {
-    if (!colabora) volverA.current = window.location.pathname + window.location.search
-  }, [colabora, ruta, valor])
+    if (!colabora && !indice) volverA.current = window.location.pathname + window.location.search
+  }, [colabora, indice, ruta, valor])
 
   // Altura de la barra fija, para el índice de letras y las anclas.
   useEffect(() => {
@@ -60,6 +91,17 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
     medir.observe(el)
     return () => medir.disconnect()
   }, [])
+
+  // Altura de la fila del buscador, para que el Índice ajuste su cuadrícula a la pantalla.
+  useEffect(() => {
+    const el = fila.current
+    if (!el) return
+    const medir = new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--alto-busqueda', `${el.offsetHeight}px`)
+    })
+    medir.observe(el)
+    return () => medir.disconnect()
+  }, [ventana])
 
   useEffect(() => {
     const el = barra.current
@@ -85,42 +127,86 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
     vigilar.observe(filaBusqueda)
 
     return () => vigilar.disconnect()
-  }, [colabora])
+  }, [ventana])
 
   // Escape cierra el desplegable.
   useEffect(() => {
     if (!abierto) return
     const alPulsar = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setAbierto(false)
+      if (e.key === 'Escape') cerrarDesplegable()
     }
     window.addEventListener('keydown', alPulsar)
     return () => window.removeEventListener('keydown', alPulsar)
   }, [abierto])
 
-  // En Colabora no hay buscador ni filas de vista.
-  const desplegado = compacta && !colabora && abierto
-  const conBotonBuscar = compacta && !colabora && !abierto
+  // En Colabora no hay buscador.
+  const desplegado = compacta && !ventana && abierto
+  const conBotonBuscar = compacta && !ventana && !abierto
 
   return (
     <>
-      <header ref={barra} className="sticky top-0 z-30 border-b border-rule bg-paper">
-        <div className="flex h-16 items-center gap-1.5 px-5 md:px-6">
-          <Link href="/" className="mr-auto truncate text-2xl font-bold tracking-tight">
-            ABC Pradilla
+      <header ref={barra} className="sticky top-0 z-30 bg-oscuro text-paper">
+        <div className="flex h-16 items-center gap-2 px-margen">
+          <Link
+            href="/"
+            onClick={(e) => {
+              // Ya en el listado completo: en vez de navegar, sube al principio (y quita un #palabra).
+              if (window.location.pathname !== '/' || window.location.search) return
+              e.preventDefault()
+              if (window.location.hash) history.replaceState(null, '', '/')
+              const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+              window.scrollTo({ top: 0, behavior: sinMovimiento ? 'auto' : 'smooth' })
+              setAbierto(false)
+            }}
+            className={`mr-auto inline-flex min-h-12 min-w-0 items-center truncate text-2xl font-bold tracking-tight text-acento transition-opacity hover:opacity-70 ${PULSADO}`}
+          >
+            <span className="font-serif font-medium">ABC</span>&nbsp;Pradilla
           </Link>
 
           {conBotonBuscar && (
             <button
+              ref={botonBuscar}
               type="button"
               onClick={() => setAbierto(true)}
               aria-expanded={false}
               aria-controls="buscador-desplegable"
               aria-label="Buscar"
-              className={`${BOTON} ${INACTIVA} max-sm:w-11 max-sm:justify-center max-sm:px-0`}
+              className={`${BOTON} ${INACTIVA_OSCURO} max-sm:w-10 max-sm:justify-center max-sm:px-0! max-sm:pointer-coarse:w-12 lg:hidden`}
             >
               <Lupa />
               <span className="hidden sm:inline">Buscar</span>
             </button>
+          )}
+
+          {/* Índice: activo, la ✕ vuelve a la vista anterior del diccionario (también en móvil, donde es la salida) */}
+          {/* Palabra del día en móvil y tableta: como una ventana, solo la ✕ (en escritorio, el chip del listado) */}
+          {filtrandoPalabra && (
+            <Link
+              href="/"
+              aria-label="Cerrar la palabra del día y volver al diccionario"
+              className={`${BOTON} ${ACTIVA_OSCURO} ${COMO_VENTANA} lg:hidden`}
+            >
+              <IconoCerrar />
+            </Link>
+          )}
+
+          {indice ? (
+            <Link
+              href="/"
+              onClick={(e) => {
+                e.preventDefault()
+                router.push(volverA.current)
+              }}
+              aria-label="Cerrar el índice y volver al diccionario"
+              className={`${BOTON} ${ACTIVA_OSCURO} ${COMO_VENTANA} group gap-2 lg:pr-2.5`}
+            >
+              <ContenidoCierre etiqueta="Índice" />
+            </Link>
+          ) : (
+            // En móvil y tableta no se muestra: el botón «Por letra» de la fila de letras ya abre el Índice.
+            <Link href="/letras" className={`${BOTON} ${INACTIVA_OSCURO} max-lg:hidden`}>
+              Índice
+            </Link>
           )}
 
           {colabora ? (
@@ -131,13 +217,13 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
                 router.push(volverA.current)
               }}
               aria-label="Cerrar Colabora y volver al diccionario"
-              className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
+              className={`${BOTON} ${VERDE} ${COMO_VENTANA} group gap-2 lg:pr-2.5`}
             >
-              Colabora
-              <Cerrar />
+              <ContenidoCierre etiqueta="Colabora" />
             </Link>
           ) : (
-            <Link href="/colabora" className={`${BOTON} ${INACTIVA}`}>
+            // En móvil y tableta, dentro del Índice solo queda la ✕ (se abre como una ventana).
+            <Link href="/colabora" className={`${BOTON} ${VERDE} ${indice || filtrandoPalabra ? 'max-lg:hidden' : ''}`}>
               Colabora
             </Link>
           )}
@@ -146,18 +232,27 @@ function Vista({ valor, onBuscar }: { valor: string; onBuscar?: (texto: string) 
         {desplegado && (
           // top-full cae sobre el borde inferior de la barra: border-t lo vuelve a dibujar
           // y deja el borde inferior del desplegable alineado con el de la tira de letras.
-          <div id="buscador-desplegable" className="absolute inset-x-0 top-full border-t border-rule bg-paper">
-            <FilaBusqueda valor={valor} onBuscar={onBuscar} autoFocus onCerrar={() => setAbierto(false)} />
+          <div id="buscador-desplegable" className="absolute inset-x-0 top-full bg-oscuro lg:hidden">
+            <FilaBusqueda valor={valor} onBuscar={onBuscar} autoFocus onCerrar={cerrarDesplegable} />
           </div>
         )}
       </header>
 
-      {!colabora && (
+      {/* Introducción (solo en la home): se va con el scroll; el buscador sí te acompaña */}
+      {ruta === '/' && <Introduccion />}
+
+      {!ventana && (
         <>
-          <div ref={fila}>
+          <PanelBusqueda
+            recuento={recuento}
+            ruta={ruta}
+            valor={valor}
+            onBuscar={onBuscar}
+            filtrandoPalabra={filtrandoPalabra}
+          />
+          <div ref={fila} className="lg:hidden">
             <FilaBusqueda valor={valor} onBuscar={onBuscar} />
           </div>
-          <FilaVistas ruta={ruta} />
         </>
       )}
     </>
@@ -176,95 +271,54 @@ function FilaBusqueda({
   onCerrar?: () => void
 }) {
   return (
-    <div role="search" className="flex gap-1.5 border-b border-rule px-5 py-3 md:px-6">
+    <div role="search" className="flex gap-2 bg-oscuro px-margen py-3">
       <CampoBusqueda valor={valor} onChange={onBuscar} autoFocus={autoFocus} />
       {onCerrar && (
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Cerrar el buscador"
-          className={`${BOTON} ${ACTIVA} w-11 justify-center px-0! hover:opacity-80 md:w-10`}
+          className={`${BOTON} ${ACTIVA_OSCURO} w-10 justify-center px-0! pointer-coarse:w-12`}
         >
-          {/* Misma caja y trazo que la lupa del campo (16×16, trazo 1.5), con la ✕ ocupándola casi entera */}
-          <svg aria-hidden="true" viewBox="0 0 16 16" className="size-4 shrink-0">
-            <path d="M2.5 2.5l11 11M13.5 2.5l-11 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <IconoCerrar />
         </button>
       )}
     </div>
   )
 }
 
-// Vista del diccionario: un filtro al inicio de la página, separado del buscador.
-function FilaVistas({ ruta }: { ruta: string }) {
-  // En /letra/x el filtro activo es una píldora propia, junto a «Letras», que se cierra con la ✕.
-  const filtro = ruta.startsWith('/letra/') ? decodeURIComponent(ruta.split('/')[2] ?? '') : null
-  const ancho = 'max-md:flex-1 max-md:justify-center'
+// Índice y Colabora abiertos: en móvil y tableta funcionan como una ventana y solo
+// muestran una ✕ cuadrada en la esquina; en escritorio, «Índice ⓧ» / «Colabora ⓧ».
+const COMO_VENTANA = 'max-lg:w-10 max-lg:justify-center max-lg:px-0! max-lg:pointer-coarse:w-12'
 
+function ContenidoCierre({ etiqueta }: { etiqueta: string }) {
   return (
-    <nav aria-label="Vistas" className="flex gap-1.5 border-b border-rule px-5 py-3 md:px-6">
-      <Pestana href="/" activa={ruta === '/'} className={ancho}>
-        Listado
-      </Pestana>
-      <Pestana href="/letras" activa={ruta === '/letras'} className={ancho}>
-        Letras
-      </Pestana>
-
-      {filtro && (
-        <Link
-          href="/letras"
-          aria-label={`Quitar el filtro de la letra ${filtro.toUpperCase()}`}
-          className={`${BOTON} ${ACTIVA} group gap-2 pr-2.5 sm:pr-2.5`}
-        >
-          {filtro}
-          <Cerrar />
-        </Link>
-      )}
-    </nav>
+    <>
+      <span className="hidden lg:inline">{etiqueta}</span>
+      <span className="hidden lg:flex">
+        <Cerrar invertido />
+      </span>
+      <span className="lg:hidden">
+        <IconoCerrar />
+      </span>
+    </>
   )
 }
 
-function Pestana({
-  href,
-  activa,
-  className = '',
-  children,
-}: {
-  href: string
-  activa: boolean
-  className?: string
-  children: ReactNode
-}) {
+// Franja oscura de la home: «Diccionario / de Pradilla» (serif + sans medium, en verde eléctrico)
+// y explicación, alineados arriba.
+// Misma rejilla que el listado: la explicación queda bajo las letras en escritorio.
+function Introduccion() {
   return (
-    <Link
-      href={href}
-      aria-current={activa ? 'page' : undefined}
-      className={`${BOTON} ${activa ? ACTIVA : INACTIVA} ${className}`}
-    >
-      {children}
-    </Link>
-  )
-}
-
-// ✕ dentro de un cuadrado: cierra la píldora activa en la que va (filtro, Colabora).
-function Cerrar() {
-  return (
-    <span
-      aria-hidden="true"
-      className="flex size-5 items-center justify-center rounded-sm bg-paper text-ink transition-opacity group-hover:opacity-80"
-    >
-      <svg viewBox="0 0 10 10" className="size-2">
-        <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-    </span>
-  )
-}
-
-function Lupa() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" className="size-3.5 shrink-0">
-      <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="m11 11 3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <section className="bg-oscuro px-margen pt-6 pb-4 text-paper lg:grid lg:grid-cols-[minmax(0,1fr)_var(--ancho-letras)] lg:items-start lg:gap-10 lg:pt-10 lg:pb-6">
+      <h1 className="leading-[1.05] text-acento">
+        <span className="block font-serif text-[2.5rem] lg:text-[3.5rem]">Diccionario</span>
+        <span className="block text-[2.25rem] font-medium tracking-tight lg:text-[3.25rem]">de Pradilla</span>
+      </h1>
+      <p className="mt-5 max-w-[46ch] text-base leading-relaxed text-paper/85 lg:mt-2 lg:text-lg">
+        Palabras, dichos y expresiones de Pradilla recogidos para que no se pierdan. Busca una palabra, explóralas por
+        letras o propón las que conozcas.
+      </p>
+    </section>
   )
 }

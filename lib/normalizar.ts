@@ -9,3 +9,16 @@ export function slugify(texto: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
+
+// Forma de la palabra sin la terminación de femenino al estilo RAE:
+// «Ranero, ra» → «Ranero». Es la que da el slug, para que no cambie al añadirla.
+export function formaBase(palabra: string): string {
+  return palabra.split(',')[0].trim()
+}
+
+// Slug del femenino de un adjetivo «Ranero, ra» → «ranera», para que también
+// se encuentre al buscarlo. Devuelve null si la palabra no tiene femenino.
+export function femenino(palabra: string): string | null {
+  if (!palabra.includes(',')) return null
+  return slugify(formaBase(palabra)).replace(/o$/, 'a')
+}

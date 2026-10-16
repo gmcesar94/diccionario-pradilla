@@ -9,7 +9,7 @@
 
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { slugify } from '../lib/normalizar.ts'
+import { formaBase, slugify } from '../lib/normalizar.ts'
 
 // Nombre de la columna de acepciones que apunta a palabras.id.
 const FK_PALABRA = 'palabra_id'
@@ -116,7 +116,8 @@ function preparar(entradas: Obj[]): { palabras: PalabraImport[]; errores: string
     if (new Set(numeros).size !== numeros.length) errores.push(`${donde}: números de acepción repetidos`)
 
     // Homógrafos: la segunda aparición recibe "-2", la tercera "-3"...
-    const base = slugify(p.palabra)
+    // «Ranero, ra» → slug «ranero»: el femenino no cambia la dirección de la palabra.
+    const base = slugify(formaBase(p.palabra))
     const veces = (usados.get(base) ?? 0) + 1
     usados.set(base, veces)
     palabras.push({ ...p, slug: veces === 1 ? base : `${base}-${veces}` })

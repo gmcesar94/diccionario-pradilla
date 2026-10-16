@@ -1,22 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #ffffff;
+  /* Papel crema con un ligero matiz verde, a juego con la franja */
+  --paper: #f1f2ea;
+  --campo: #fbfcf7;
   --ink: #111111;
   --muted: #6b6b6b;
-  --rule: #d9d9d9;
+  --rule: #d6dacb;
   --error: #b42318;
-  /* La ajusta Cabecera.tsx al medir la cabecera fija */
+  /* Franja superior: verde oscuro que acompaña al verde eléctrico del título */
+  --oscuro: #10291b;
+  --acento: #7df079;
+  /* Las ajustan Cabecera.tsx y FiltroLetras.tsx al medir la barra fija, el buscador y la fila de letras */
   --alto-cabecera: 65px;
+  --alto-indice: 65px;
+  --alto-busqueda: 65px;
+  /* Ancho del bloque de letras del panel de escritorio (lo mide PanelBusqueda.tsx) */
+  --ancho-letras: 34rem;
 }
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-campo: var(--campo);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-rule: var(--rule);
   --color-error: var(--error);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-oscuro: var(--oscuro);
+  --color-acento: var(--acento);
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-plex-serif), Georgia, serif;
+}
+
+/* Margen lateral común a toda la web: crece con la pantalla para que el contenido respire.
+   Lo usan cabecera, buscador, letras, entradas y formularios (clase px-margen). */
+:root {
+  --margen: 20px;
+}
+@media (width >= 48rem) {
+  :root { --margen: 24px; }
+}
+@media (width >= 64rem) {
+  :root { --margen: 40px; }
+}
+@media (width >= 80rem) {
+  :root { --margen: 64px; }
+}
+@media (width >= 96rem) {
+  :root { --margen: 80px; }
+}
+
+@utility px-margen {
+  padding-inline: var(--margen);
 }
 
 body {
@@ -29,4 +64,16 @@ body {
   html {
     scroll-behavior: smooth;
   }
+}
+
+/* Foco con teclado: contorno de 2 px separado del elemento, visible sobre blanco y sobre negro.
+   Los campos de texto usan su propio anillo interior (ring-inset). */
+:where(a, button, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Sobre la franja oscura, el contorno de foco va en crema para que se vea. */
+.bg-oscuro :where(a, button, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline-color: var(--paper);
 }

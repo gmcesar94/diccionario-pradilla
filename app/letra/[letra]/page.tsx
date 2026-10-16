@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
+import FiltroLetras from '@/app/components/FiltroLetras'
 import Listado, { ListadoCompleto } from '@/app/components/Listado'
 import { getPalabras } from '@/lib/datos'
 import { LETRAS, letraDe } from '@/lib/letras'
@@ -23,19 +24,22 @@ export async function generateMetadata(props: PageProps<'/letra/[letra]'>): Prom
 
 export default async function PaginaLetra(props: PageProps<'/letra/[letra]'>) {
   const letra = await leerLetra(props.params)
-  const palabras = (await getPalabras()).filter((p) => letraDe(p.palabra) === letra)
+  const todas = await getPalabras()
+  const palabras = todas.filter((p) => letraDe(p.palabra) === letra)
+  const slugs = todas.map((p) => p.slug)
 
   return (
     <>
       <h1 className="sr-only">Letra {letra.toUpperCase()}</h1>
+      <FiltroLetras activa={letra} />
 
       {palabras.length === 0 ? (
-        <p className="px-5 py-12 text-center text-muted md:px-6">
+        <p className="px-margen py-12 text-center text-muted">
           Todavía no hay palabras con la {letra.toUpperCase()}.
         </p>
       ) : (
-        <Suspense fallback={<ListadoCompleto palabras={palabras} separadores={false} />}>
-          <Listado palabras={palabras} separadores={false} />
+        <Suspense fallback={<ListadoCompleto palabras={palabras} separadores={false} slugs={slugs} />}>
+          <Listado palabras={palabras} separadores={false} slugs={slugs} />
         </Suspense>
       )}
     </>
